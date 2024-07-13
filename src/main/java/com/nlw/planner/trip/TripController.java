@@ -1,5 +1,9 @@
 package com.nlw.planner.trip;
 
+import com.nlw.planner.activity.ActivityData;
+import com.nlw.planner.activity.ActivityRequestPayload;
+import com.nlw.planner.activity.ActivityResponse;
+import com.nlw.planner.activity.ActivityService;
 import com.nlw.planner.participant.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +21,9 @@ public class TripController {
 
     @Autowired
     private ParticipantService participantService;
+
+    @Autowired
+    private ActivityService activityService;
 
     @Autowired
     private TripRepository repository;
@@ -99,5 +106,27 @@ public class TripController {
         List<ParticipantData> participantsList = this.participantService.getAllTripParticipants(id);
 
         return ResponseEntity.ok(participantsList);
+    }
+
+    @PostMapping("/{id}/activities")
+    public ResponseEntity<ActivityResponse> registerActivity(@PathVariable UUID id, @RequestBody ActivityRequestPayload payload) {
+        Optional<Trip> trip = this.repository.findById(id);
+
+        if (trip.isPresent()) {
+            Trip rawTrip = trip.get();
+
+            ActivityResponse activityResponse = this.activityService.saveActivity(payload, rawTrip);
+
+            return ResponseEntity.ok(activityResponse);
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{id}/activities")
+    public ResponseEntity<List<ActivityData>> getAllActivities(@PathVariable UUID id) {
+        List<ActivityData> activitiesList = this.activityService.getAllTripActivities(id);
+
+        return ResponseEntity.ok(activitiesList);
     }
 }
